@@ -1,3 +1,4 @@
 # Ignore Mosquitto data and log directories
 data/
 log/
+venv/
