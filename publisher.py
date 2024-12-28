@@ -48,3 +48,11 @@ for index, row in train_df.iterrows():
     client.publish(topic, row.to_json())
     print(f"{row.to_json()}")
 client.disconnect()
+
+result_topic = "resultsflow"
+
+# Publicar resultados no novo tópico
+for index, prediction in enumerate(y_pred):
+    result = {"index": index, "prediction": int(prediction)}
+    client.publish(result_topic, str(result))
+    print(f"Published to {result_topic}: {result}")
