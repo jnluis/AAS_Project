@@ -6,6 +6,7 @@ kiwisolver==1.4.8
 matplotlib==3.10.0
 numpy==2.2.1
 packaging==24.2
+paho-mqtt==2.1.0
 pandas==2.2.3
 pillow==11.0.0
 pyparsing==3.2.0
