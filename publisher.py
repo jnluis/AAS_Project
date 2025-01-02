@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, matthews_corrcoef
 from sklearn.model_selection import train_test_split
 
 # Define the file path
@@ -30,6 +30,9 @@ y_pred = rf_model.predict(X)
 print("Classification Report:")
 print(classification_report(y, y_pred))
 
+mcc = matthews_corrcoef(y, y_pred)
+print(f"Matthews Correlation Coefficient (MCC): {mcc:.4f}")
+
 # Optionally, print feature importances
 print("Feature Importances:")
 print(rf_model.feature_importances_)
@@ -46,15 +49,19 @@ client.connect(broker, port)
 #Publish the data
 for index, row in train_df.iterrows():
     client.publish(topic, row.to_json())
-    print(f"{row.to_json()}")
+    #print(f"{row.to_json()}")
 
 result_topic = "resultsflow"
 
-# Publicar resultados no novo tópico
-for index, prediction in enumerate(y_pred):
-    result = {"index": index, "prediction": int(prediction)}
-    client.publish(result_topic, str(result))
-    print(f"Published to {result_topic}: {result}")
+# Comentei porque vou enviar apenas o valor do MCC por enquanto
+# # Publicar resultados no novo tópico
+# for index, prediction in enumerate(y_pred):
+#     result = {"index": index, "prediction": int(prediction)}
+#     client.publish(result_topic, str(result))
+#     print(f"Published to {result_topic}: {result}")
+
+client.publish(result_topic, mcc)
+print(f"Published MCC to {result_topic}: {mcc} ")
 
 client.disconnect()
 
