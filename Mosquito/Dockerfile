@@ -5,7 +5,7 @@ FROM eclipse-mosquitto:latest
 COPY mosquitto.conf /mosquitto/config/mosquitto.conf
 
 # Expose ports
-EXPOSE 1883
+EXPOSE 12000
 EXPOSE 9001
 
 # Start Mosquitto when the container runs

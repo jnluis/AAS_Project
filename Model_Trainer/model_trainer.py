@@ -6,11 +6,13 @@ from sklearn.impute import SimpleImputer
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import os
+
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
 
 
 # Define the file path
-file_path = 'conn.log.labeled'
+file_path = '../Data_files/conn.log.labeled'
 
 # Manually define the expected column names
 column_names = [
@@ -36,7 +38,7 @@ while df.shape[1] < len(column_names):
 # Assign column names
 df.columns = column_names
 
-# Replace - with NaN for better handling of missing data
+# Replace `-` with NaN for better handling of missing data
 df.replace("-", pd.NA, inplace=True)
 
 # Check which columns have only NaN values
@@ -59,7 +61,7 @@ ddos_count = detailed_label_counts['DDoS']
 minority_class_size = len(df[df['detailed-label'] != 'DDoS'])
 
 # Definir o percentual de redução da classe DDoS
-percentage_reduction = 0.6 # Exemplo: reduzir 50% da classe DDoS
+percentage_reduction = 0.6 # Exemplo: reduzir 60% da classe DDoS
 
 # Calcular o número de amostras a serem mantidas na classe DDoS
 ddos_undersample_size = int(ddos_count * (1 - percentage_reduction))
@@ -150,29 +152,45 @@ df_balanced['duration'] = scaler.fit_transform(df_balanced[['duration']])
 
 
 
-# Replace NA values with an empty string (or any placeholder you prefer) in the columns
-columns_to_encode = ['id.orig_h', 'id.resp_h', 'proto', 'service','conn_state','history']
 
-# Replace NA values with 'No_Value'
+columns_to_encode = ['id.orig_h', 'id.resp_h', 'proto', 'service', 'conn_state', 'history']
+
+# Substitui valores NA por 'No_Value'
 df_balanced[columns_to_encode] = df_balanced[columns_to_encode].replace({pd.NA: 'No_Value'})
 
-# Initialize OneHotEncoder
-encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+# Inicializa um DataFrame para os dados codificados
+encoded_columns_df = pd.DataFrame()
 
-# Fit and transform the selected columns
-encoded_columns = encoder.fit_transform(df_balanced[columns_to_encode])
+for column in columns_to_encode:
+    if column == 'id.resp_h':
+        # Usa OneHotEncoder com max_categories=3 para 'id.resp_h'
+        encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore', max_categories=3)
+    else:
+        # Usa o OneHotEncoder padrão para outras colunas
+        encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore', max_categories=7)
+    
+    # Aplica o encoder na coluna
+    encoded_column = encoder.fit_transform(df_balanced[[column]])
+    
+    # Converte a coluna codificada para DataFrame
+    encoded_df = pd.DataFrame(
+        encoded_column, 
+        columns=encoder.get_feature_names_out([column])
+    )
+    
+    # Concatena com o DataFrame de dados codificados
+    encoded_columns_df = pd.concat([encoded_columns_df, encoded_df], axis=1)
 
-# Convert the encoded columns to a DataFrame
-encoded_columns_df = pd.DataFrame(
-    encoded_columns, 
-    columns=encoder.get_feature_names_out(columns_to_encode)
-)
-
-# Concatenate the one-hot encoded columns at the beginning of the original DataFrame
+# Concatena as colunas codificadas no DataFrame original
 df_balanced_encoded = pd.concat([encoded_columns_df, df_balanced], axis=1)
 
-# Optionally drop the original columns that were encoded
+# Remove as colunas originais
 df_balanced_encoded.drop(columns=columns_to_encode, inplace=True)
+
+
+
+
+
 
 
 # Ensure columns are numeric before filling NaNs
@@ -193,13 +211,45 @@ mode_value = df_balanced_encoded['missed_bytes'].mode()[0]
 # Replace 'C' with the mode value
 df_balanced_encoded['missed_bytes'] = df_balanced_encoded['missed_bytes'].replace('C', mode_value)
 
+
 #Remove row with column "resp_ip_bytes" = "-   Malicious   DDoS"
 df_balanced_encoded = df_balanced_encoded[df_balanced_encoded['resp_ip_bytes'] != '-   Malicious   DDoS']
 
+#remove columns all zero columns
+columns_to_remove = [col for col in df_balanced_encoded.columns if df_balanced_encoded[col].nunique() <= 1]
+df_balanced_encoded = df_balanced_encoded.drop(columns=columns_to_remove)
 
 
-# Split the data into 50% train and 50% test
-train_df, test_df = train_test_split(df_balanced_encoded, test_size=0.5, random_state=42)
+
+#Grafico com a quantidade de valores benignos e maliciosos
+#Coloca o número de amostras de cada classe em um gráfico de barras
+plt.figure(figsize=(8, 6))
+sns.countplot(x='label', data=df_balanced_encoded)
+plt.title("Distribution of Labels")
+plt.show()
+
+# Remove 1/3 of malicious samples
+df_balanced_encoded = df_balanced_encoded.drop(df_balanced_encoded[df_balanced_encoded['label'] == 0].sample(frac=0.33, random_state=42).index)
+
+# Check the distribution of labels after undersampling
+plt.figure(figsize=(8, 6))
+sns.countplot(x='label', data=df_balanced_encoded)
+plt.title("Distribution of Labels")
+plt.show()
+
+
+
+# Now, calculate the correlation matrix again
+correlation_matrix = df_balanced_encoded.corr()
+
+# Plot the correlation matrix as a heatmap
+plt.figure(figsize=(12, 10))
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt='.2f', linewidths=0.5)
+plt.title("Correlation Matrix")
+plt.show()
+
+
+train_df, test_df = train_test_split(df_balanced_encoded, test_size=0.9, random_state=42)
 
 # Check the distribution in train and test sets
 print("Training set distribution:")
@@ -208,18 +258,76 @@ print(train_df['label'].value_counts())
 print("\nTesting set distribution:")
 print(test_df['label'].value_counts())
 
-# Ensure the directory one level up exists
-os.makedirs('../Data_files', exist_ok=True)
-
-# Save the DataFrames to the 'Data_files' folder
+# Save the test DataFrame to a CSV file
 train_df.to_csv('../Data_files/train_data.csv', index=False)
-print("Train data saved to '../Data_files/train_data.csv'.")
+print("Train data saved to 'train_data.csv'.")
 
 test_df.to_csv('../Data_files/test_data.csv', index=False)
-print("Test data saved to '../Data_files/test_data.csv'.")
+print("Test data saved to 'test_data.csv'.")
 
 
 #Print the name of the columns
 print(train_df.columns)
+
+
+
+# Import necessary libraries
+from sklearn.linear_model import SGDClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import os
+import joblib
+
+# Separate features (X) and labels (y) for training and testing sets
+X_train = train_df.drop(columns=['label'])
+y_train = train_df['label']
+
+X_test = test_df.drop(columns=['label'])
+y_test = test_df['label']
+
+# Initialize Logistic Regression model
+logreg_model = SGDClassifier(loss='log_loss', random_state=42, max_iter=100, alpha=0.001)
+
+# Train the model
+logreg_model.fit(X_train, y_train)
+
+# Make predictions on the test set
+y_pred = logreg_model.predict(X_test)
+
+# Ensure the 'Model' folder exists
+os.makedirs('../Model', exist_ok=True)
+model_path = '../Model/logreg_model.pkl'
+joblib.dump(logreg_model, model_path)
+print(f"Model saved to '{model_path}'.")
+
+# Evaluate the model
+print("Model Performance on Test Data:")
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+
+# Confusion Matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+print("\nConfusion Matrix:")
+print(conf_matrix)
+
+# Plot Confusion Matrix
+plt.figure(figsize=(8, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['Class 0', 'Class 1'], yticklabels=['Class 0', 'Class 1'])
+plt.title('Confusion Matrix')
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.show()
+
+# Specify the path to the text file
+accuracy_file_path = '../Model/final_accuracy.txt'
+# Write the final accuracy to the text file
+with open(accuracy_file_path, 'a') as f:
+    f.write(f"Final Accuracy: {accuracy_score(y_test, y_pred):.4f} - Inicial\n")
+
+print(f"Final accuracy saved to {accuracy_file_path}")
+
 
 
