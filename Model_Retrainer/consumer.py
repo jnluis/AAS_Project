@@ -1,6 +1,9 @@
 import paho.mqtt.client as mqtt
 import sqlite3
 import json
+import pandas as pd
+import joblib
+from sklearn.metrics import matthews_corrcoef
 
 # Database setup
 db_file = "mqtt_data.db"
@@ -14,13 +17,34 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS dataflow (
 )''')
 conn.commit()
 
+def calculate_mcc():
+    #Load data from dataset from csv file
+    df_data = pd.read_csv('../Data_files/mcc_test.csv')
+    X = df_data.drop(columns=['label'])  # Features
+    y = df_data['label']  # Target variable
+    #Load model from file
+    rf_model = joblib.load('../Model/logreg_model.pkl')
+    # Make predictions
+    y_pred = rf_model.predict(X)
+    # Evaluate the model
+    mcc = matthews_corrcoef(y, y_pred)
+    print(f"Matthews Correlation Coefficient (MCC): {mcc:.4f}")
+    return mcc
+
+
+
+
 # Broker details
 broker = "localhost"
 port = 12000
 topic = "dataflow"
+new_topic = "grafana"
+
+messages_count = 0
 
 # Callback when a message is received
 def on_message(client, userdata, msg):
+    global messages_count
     print(f"Received message from {msg.topic}: {msg.payload.decode()}")
 
     # Parse the received message
@@ -30,6 +54,12 @@ def on_message(client, userdata, msg):
     cursor.execute("INSERT INTO dataflow (data) VALUES (?)", [json.dumps(data)])
     conn.commit()
     print("Data stored in the database.")
+    messages_count += 1
+    print(f"Total messages stored: {messages_count}")
+    if messages_count == 20:
+        mcc = calculate_mcc()
+        client.publish(new_topic, mcc)
+        messages_count = 0
 
 # Create an MQTT client instance
 client = mqtt.Client(protocol=mqtt.MQTTv311)

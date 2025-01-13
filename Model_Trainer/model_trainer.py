@@ -228,8 +228,7 @@ sns.countplot(x='label', data=df_balanced_encoded)
 plt.title("Distribution of Labels")
 plt.show()
 
-# Remove 1/3 of malicious samples
-df_balanced_encoded = df_balanced_encoded.drop(df_balanced_encoded[df_balanced_encoded['label'] == 0].sample(frac=0.33, random_state=42).index)
+
 
 # Check the distribution of labels after undersampling
 plt.figure(figsize=(8, 6))
@@ -270,6 +269,32 @@ print("Test data saved to 'test_data.csv'.")
 print(train_df.columns)
 
 
+#how many malicious samples are in the test set
+malicious_samples = test_df[test_df['label'] == 0]
+print(f"Number of malicious samples in the test set: {malicious_samples.shape[0]}")
+benign_samples = test_df[test_df['label'] == 1]
+print(f"Number of benign samples in the test set: {benign_samples.shape[0]}")
+
+malicious_sampled = malicious_samples.sample(n=200, random_state=42)
+benign_sampled = benign_samples.sample(n=150, random_state=42)
+
+mcc_test_df = pd.concat([malicious_sampled, benign_sampled])
+
+# Save the DataFrame to a CSV file
+mcc_test_df.to_csv('../Data_files/mcc_test.csv', index=False)
+
+print(f"mcc_test.csv created with {mcc_test_df.shape[0]} samples.")
+
+# Remove the sampled rows from the original test_df
+test_df = test_df.drop(malicious_sampled.index)
+test_df = test_df.drop(benign_sampled.index)
+
+# Save the modified test_df if you need to
+test_df.to_csv('../Data_files/test_data.csv', index=False)
+
+print(f"mcc_test.csv created with {mcc_test_df.shape[0]} samples. The test dataset has been updated.")
+
+
 
 # Import necessary libraries
 from sklearn.linear_model import SGDClassifier
@@ -288,7 +313,7 @@ X_test = test_df.drop(columns=['label'])
 y_test = test_df['label']
 
 # Initialize Logistic Regression model
-logreg_model = SGDClassifier(loss='log_loss', random_state=42, max_iter=100, alpha=0.001)
+logreg_model = SGDClassifier(loss='log_loss', random_state=42, max_iter=1000, alpha=0.001)
 
 # Train the model
 logreg_model.fit(X_train, y_train)
@@ -328,6 +353,9 @@ with open(accuracy_file_path, 'a') as f:
     f.write(f"Final Accuracy: {accuracy_score(y_test, y_pred):.4f} - Inicial\n")
 
 print(f"Final accuracy saved to {accuracy_file_path}")
+
+
+
 
 
 
