@@ -1,0 +1,19 @@
+FROM bitnami/grafana:latest
+
+# Ensure APT is configured correctly and install Python3
+USER root
+
+# Install necessary dependencies
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv
+
+# Create a virtual environment
+RUN python3 -m venv /opt/venv
+
+# Install required Python package inside the virtual environment
+RUN pip install paho-mqtt --break-system-packages
+
+# Install required Python package inside the virtual environment
+RUN pip install pandas --break-system-packages
+
+# Install the SQLite plugin for Grafana
+RUN grafana cli plugins install frser-sqlite-datasource

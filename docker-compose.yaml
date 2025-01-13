@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    ports:
+      - "12000:12000"  # MQTT port
+      - "9001:9001"   # WebSocket port (optional, if needed)
+    volumes:
+      - ./Mosquito/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    networks:
+      - mqtt_network
+
+  grafana:
+    build:
+      context: .
+      dockerfile: Grafana/DockerFile  # Build the custom Dockerfile
+    container_name: grafana
+    ports:
+      - "3000:3000"  # Grafana web interface
+    volumes:
+      - grafana_data:/bitnami/grafana
+      - ./scripts:/scripts  # Mount the local scripts folder to the container
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin  # Set admin password
+    networks:
+      - mqtt_network
+    entrypoint: /bin/bash -c "python3 /scripts/store_mcc.py & /opt/bitnami/grafana/bin/grafana-server"  # Run script then Grafana
+
+networks:
+  mqtt_network:
+    driver: bridge
+
+volumes:
+  grafana_data:
+    driver: local

@@ -275,8 +275,8 @@ print(f"Number of malicious samples in the test set: {malicious_samples.shape[0]
 benign_samples = test_df[test_df['label'] == 1]
 print(f"Number of benign samples in the test set: {benign_samples.shape[0]}")
 
-malicious_sampled = malicious_samples.sample(n=200, random_state=42)
-benign_sampled = benign_samples.sample(n=150, random_state=42)
+malicious_sampled = malicious_samples.sample(n=400, random_state=42)
+benign_sampled = benign_samples.sample(n=250, random_state=42)
 
 mcc_test_df = pd.concat([malicious_sampled, benign_sampled])
 
@@ -313,7 +313,7 @@ X_test = test_df.drop(columns=['label'])
 y_test = test_df['label']
 
 # Initialize Logistic Regression model
-logreg_model = SGDClassifier(loss='log_loss', random_state=42, max_iter=1000, alpha=0.001)
+logreg_model = SGDClassifier(loss='log_loss', random_state=42, max_iter=20, alpha=0.001)
 
 # Train the model
 logreg_model.fit(X_train, y_train)

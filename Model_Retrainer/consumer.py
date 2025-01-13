@@ -4,6 +4,7 @@ import json
 import pandas as pd
 import joblib
 from sklearn.metrics import matthews_corrcoef
+from sklearn.metrics import accuracy_score
 
 # Database setup
 db_file = "mqtt_data.db"
@@ -31,6 +32,19 @@ def calculate_mcc():
     print(f"Matthews Correlation Coefficient (MCC): {mcc:.4f}")
     return mcc
 
+def calculate_accuracy():
+    df_data = pd.read_csv('../Data_files/mcc_test.csv')
+    X = df_data.drop(columns=['label'])  # Features
+    y = df_data['label']  # Target variable
+    #Load model from file
+    rf_model = joblib.load('../Model/logreg_model.pkl')
+    # Make predictions
+    y_pred = rf_model.predict(X)
+    # Evaluate the model
+    accuracy = accuracy_score(y, y_pred)
+    print(f"Accuracy: {accuracy:.4f}")
+    return accuracy
+
 
 
 
@@ -56,9 +70,11 @@ def on_message(client, userdata, msg):
     print("Data stored in the database.")
     messages_count += 1
     print(f"Total messages stored: {messages_count}")
-    if messages_count == 20:
+    if messages_count == 30:
         mcc = calculate_mcc()
-        client.publish(new_topic, mcc)
+        accuracy = calculate_accuracy()
+        dictionary = {'mcc': mcc, 'accuracy': accuracy}
+        client.publish(new_topic, json.dumps(dictionary))
         messages_count = 0
 
 # Create an MQTT client instance
