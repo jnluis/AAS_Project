@@ -341,9 +341,10 @@ print(conf_matrix)
 # Plot Confusion Matrix
 plt.figure(figsize=(8, 6))
 sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['Class 0', 'Class 1'], yticklabels=['Class 0', 'Class 1'])
-plt.title('Confusion Matrix')
+plt.title(f'Confusion Matrix: SGD')
 plt.xlabel('Predicted Label')
 plt.ylabel('True Label')
+plt.savefig(f'../Images/SGD.png')
 plt.show()
 
 # Specify the path to the text file

@@ -41,3 +41,4 @@ Final Accuracy: 0.94995 - 38
 Final Accuracy: 0.94995 - 39
 Final Accuracy: 0.94995 - 40
 Final Accuracy: 0.8070 - Inicial
+Final Accuracy: 0.8070 - Inicial
