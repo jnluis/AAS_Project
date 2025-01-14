@@ -6,7 +6,6 @@ services:
     container_name: mosquitto
     ports:
       - "12000:12000"  # MQTT port
-      - "9001:9001"   # WebSocket port (optional, if needed)
     volumes:
       - ./Mosquito/mosquitto.conf:/mosquitto/config/mosquitto.conf
     networks:

@@ -15,5 +15,3 @@ RUN pip install paho-mqtt --break-system-packages
 # Install required Python package inside the virtual environment
 RUN pip install pandas --break-system-packages
 
-# Install the SQLite plugin for Grafana
-RUN grafana cli plugins install frser-sqlite-datasource

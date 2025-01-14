@@ -22,7 +22,7 @@ for index, row in train_df.iterrows():
     client.publish(topic, message)
     print(f"Published to {topic}: {message}")
     # Wait for 15 seconds before sending the next row
-    time.sleep(1)
+    time.sleep(0.5)
 
 # Disconnect the client
 client.disconnect()

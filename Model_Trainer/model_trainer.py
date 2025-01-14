@@ -275,8 +275,8 @@ print(f"Number of malicious samples in the test set: {malicious_samples.shape[0]
 benign_samples = test_df[test_df['label'] == 1]
 print(f"Number of benign samples in the test set: {benign_samples.shape[0]}")
 
-malicious_sampled = malicious_samples.sample(n=400, random_state=42)
-benign_sampled = benign_samples.sample(n=250, random_state=42)
+malicious_sampled = malicious_samples.sample(n=700, random_state=42)
+benign_sampled = benign_samples.sample(n=500, random_state=42)
 
 mcc_test_df = pd.concat([malicious_sampled, benign_sampled])
 
@@ -294,6 +294,24 @@ test_df.to_csv('../Data_files/test_data.csv', index=False)
 
 print(f"mcc_test.csv created with {mcc_test_df.shape[0]} samples. The test dataset has been updated.")
 
+# Get the counts for each dataset
+# train_count = len(train_df)
+# test_count = len(test_df)
+# mcc_count = len(mcc_test_df)
+
+# # Plot the bar chart
+# datasets = ['Training Set', 'Flow Set', 'Test Set']
+# counts = [train_count, test_count, mcc_count]
+
+# plt.figure(figsize=(10, 6))
+# plt.bar(datasets, counts, color=['blue', 'orange', 'purple'])
+# plt.title('Total Samples in Training, Flow, and Test Sets')
+# plt.xlabel('Dataset')
+# plt.ylabel('Total Count')
+# plt.grid(True, axis='y', linestyle='--', alpha=0.6)
+# plt.tight_layout()
+# plt.show()
+
 
 
 # Import necessary libraries
@@ -309,8 +327,8 @@ import joblib
 X_train = train_df.drop(columns=['label'])
 y_train = train_df['label']
 
-X_test = test_df.drop(columns=['label'])
-y_test = test_df['label']
+X_test = mcc_test_df.drop(columns=['label'])
+y_test = mcc_test_df['label']
 
 # Initialize Logistic Regression model
 logreg_model = SGDClassifier(loss='log_loss', random_state=42, max_iter=20, alpha=0.001)

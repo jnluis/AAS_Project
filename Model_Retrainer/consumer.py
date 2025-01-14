@@ -70,7 +70,7 @@ def on_message(client, userdata, msg):
     print("Data stored in the database.")
     messages_count += 1
     print(f"Total messages stored: {messages_count}")
-    if messages_count == 30:
+    if messages_count == 150:
         mcc = calculate_mcc()
         accuracy = calculate_accuracy()
         dictionary = {'mcc': mcc, 'accuracy': accuracy}

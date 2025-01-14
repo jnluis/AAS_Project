@@ -112,7 +112,7 @@ def retrain_model(counter):
     print("Model updated and saved.")
 
     # Evaluate the model on the new data
-    test_df = pd.read_csv('../Data_files/test_data.csv')
+    test_df = pd.read_csv('../Data_files/mcc_test.csv')
     X_test = test_df.drop(columns=['label'])
     y_test = test_df['label']
     y_pred = logreg_model.predict(X_test)
@@ -131,10 +131,7 @@ def retrain_model(counter):
     print("Cleaning up the database...")
     delete_data_from_db()
 
-
-
-
-
+    
 def export_data_to_csv(db_file="mqtt_data.db", csv_file="retrain.csv"):
     # Connect to the SQLite database
     conn = sqlite3.connect(db_file)

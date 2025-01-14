@@ -51,24 +51,24 @@ def on_message(client, userdata, msg):
 
             new_topic = "retrain"
             # Infinite loop to send the message every 30 seconds
-            retrain = {"retrain": True}
-            message = pd.Series(retrain).to_json()
-            client.publish(new_topic, message)
-            print(f"Published to {new_topic}: {message}")
+            # retrain = {"retrain": True}
+            # message = pd.Series(retrain).to_json()
+            # client.publish(new_topic, message)
+            # print(f"Published to {new_topic}: {message}")
 
             # #Thresold value
-            # if mcc_value < 0.90:
-            #     new_topic = "retrain"
-            #     # Infinite loop to send the message every 30 seconds
-            #     retrain = {"retrain": True}
-            #     message = pd.Series(retrain).to_json()
-            #     client.publish(new_topic, message)
-            #     print(f"Published to {new_topic}: {message}")
+            if mcc_value < 0.94:
+                new_topic = "retrain"
+                # Infinite loop to send the message every 30 seconds
+                retrain = {"retrain": True}
+                message = pd.Series(retrain).to_json()
+                client.publish(new_topic, message)
+                print(f"Published to {new_topic}: {message}")
 
-            #     print("MCC value is less than 0.65")
+                print("MCC value is less than 0.65")
 
-            # else:
-            #     print("MCC value is greater than 0.65")
+            else:
+                print("MCC value is greater than 0.65")
         else:
             print("No MCC value found in the message.")
     except json.JSONDecodeError:
