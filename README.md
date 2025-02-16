@@ -1,3 +1,9 @@
+# AAS - Machine Learning Applied to Security
+
+### Academic Year: 2024/25
+
+### Grade: 19.25
+
 To start Grafana and MQTT:
 
 ```shell
@@ -43,3 +49,5 @@ To start the Model Retrain:
 cd Model_Retrainer
 python3 retrain_model.py
 ```
+
+Project done in collaboration with [@Diogo Almeida](https://github.com/twisteddi84).
